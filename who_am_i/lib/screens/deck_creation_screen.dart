@@ -12,10 +12,9 @@ class DeckCreationScreen extends StatelessWidget {
       body: Center(
         child: Column(
           children: [
-            const Text('Hier kannst du ein neues Deck erstellen!'),
             ElevatedButton(
               onPressed: () {
-                // Logik zum Hinzufügen von Bildern
+                // Hinzufügen von Bildern implementieren
               },
               child: const Text('Bild hinzufügen'),
             ),

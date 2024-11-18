@@ -15,7 +15,6 @@ class WhoAmIApp extends StatelessWidget {
       title: 'Who Am I',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: const HomeScreen(),
     );

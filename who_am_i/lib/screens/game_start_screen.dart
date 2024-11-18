@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:who_am_i/screens/game_screen.dart';
 
 class GameStartScreen extends StatelessWidget {
   const GameStartScreen({Key? key}) : super(key: key);
@@ -12,12 +13,14 @@ class GameStartScreen extends StatelessWidget {
       body: Center(
         child: Column(
           children: [
-            const Text('Wähle ein Deck und füge Spielernamen hinzu!'),
             ElevatedButton(
               onPressed: () {
-                // Logik zum Starten des Spiels
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const GameScreen()),
+                );
               },
-              child: const Text('Deck auswählen'),
+              child: const Text('Spiel starten'),
             ),
           ],
         ),

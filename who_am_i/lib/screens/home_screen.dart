@@ -25,7 +25,6 @@ class HomeScreen extends StatelessWidget {
               },
               child: const Text('Deck erstellen'),
             ),
-            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
