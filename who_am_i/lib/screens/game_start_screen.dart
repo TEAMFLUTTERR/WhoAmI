@@ -20,10 +20,8 @@ class _GameStartScreenState extends State<GameStartScreen> {
   }
 
   void _initializePlayerControllers() {
-    _playerNameControllers = List.generate(
-      _playerCount, 
-      (index) => TextEditingController(text: 'Spieler ${index + 1}')
-    );
+    _playerNameControllers = List.generate(_playerCount,
+        (index) => TextEditingController(text: 'Spieler ${index + 1}'));
   }
 
   @override
@@ -50,6 +48,8 @@ class _GameStartScreenState extends State<GameStartScreen> {
         elevation: 0,
       ),
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,

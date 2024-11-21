@@ -37,34 +37,40 @@ class HomeScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildStyledButton(
-                context, 
-                'Deck erstellen', 
-                Icons.create, 
+                context,
+                'Deck erstellen',
+                Icons.create,
                 () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const DeckCreationScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const DeckCreationScreen()),
                 ),
                 Colors.green,
               ),
               const SizedBox(height: 20),
               _buildStyledButton(
-                context, 
-                'Spiel starten', 
-                Icons.play_arrow, 
+                context,
+                'Spiel starten',
+                Icons.play_arrow,
                 () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const GameStartScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const GameStartScreen()),
                 ),
                 Colors.blue,
               ),
               const SizedBox(height: 20),
               _buildStyledButton(
-                context, 
-                'Bestenliste', 
-                Icons.leaderboard, 
+                context,
+                'Bestenliste',
+                Icons.leaderboard,
                 () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const /*LeaderboardScreen()*/ HomeScreen()), //Bitte austauschen wenn Leaderboard funktioniert.
+                  MaterialPageRoute(
+                      builder: (context) => const LeaderboardScreen(
+                            playerNames: ["Spieler 1", "Spieler 2"],
+                            playerPoints: [0, 0],
+                          )), //Hier müssten dann Werte der letzten Runde rein
                 ),
                 Colors.orange,
               ),
@@ -76,9 +82,9 @@ class HomeScreen extends StatelessWidget {
   }
 
   Widget _buildStyledButton(
-    BuildContext context, 
-    String text, 
-    IconData icon, 
+    BuildContext context,
+    String text,
+    IconData icon,
     VoidCallback onPressed,
     Color buttonColor,
   ) {

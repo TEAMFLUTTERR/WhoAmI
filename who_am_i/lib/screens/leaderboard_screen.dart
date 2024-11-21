@@ -52,3 +52,26 @@
 //     );
 //   }
 // }
+
+import 'package:flutter/material.dart';
+
+class LeaderboardScreen extends StatelessWidget {
+  final List<String> playerNames;
+  final List<int> playerPoints;
+
+  const LeaderboardScreen({
+    Key? key,
+    required this.playerNames,
+    required this.playerPoints,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Leaderboard'),
+        backgroundColor: Colors.deepPurple,
+      ),
+    );
+  }
+}
