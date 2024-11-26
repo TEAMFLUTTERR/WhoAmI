@@ -109,6 +109,7 @@ class _GameScreenState extends State<GameScreen> {
 
     setState(() {
       _currentPlayerIndex = (_currentPlayerIndex + 1) % _players.length;
+      _canProcessTilt = false; // Block tilt input during countdown
     });
 
     _startPlayerSwitchTimer();
@@ -116,7 +117,9 @@ class _GameScreenState extends State<GameScreen> {
 
   void _nextImage() {
     if (_deck.isNotEmpty) {
-      _deck.removeAt(0); // Nächstes Bild
+      setState(() {
+        _deck.removeAt(0); // Nächstes Bild
+      });
     } else {
       _endGame(); // Keine Bilder mehr
     }
@@ -133,7 +136,8 @@ class _GameScreenState extends State<GameScreen> {
         });
       } else {
         timer.cancel();
-        _nextImage();
+        _canProcessTilt = true; // Re-enable tilt after countdown
+        _nextImage(); // Now that the countdown is done, show the next image
       }
     });
   }
