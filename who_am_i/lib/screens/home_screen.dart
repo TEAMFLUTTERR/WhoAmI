@@ -68,8 +68,7 @@ class HomeScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                       builder: (context) => const LeaderboardScreen(
-                            playerNames: ["Spieler 1", "Spieler 2"],
-                            playerPoints: [0, 0],
+                          players: []
                           )), //Hier müssten dann Werte der letzten Runde rein
                 ),
                 Colors.orange,

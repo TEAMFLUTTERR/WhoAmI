@@ -3,16 +3,18 @@ import 'package:sensors_plus/sensors_plus.dart';
 import '../utils/sensor_helper.dart';
 import '../utils/timer_helper.dart';
 import 'dart:async';
+import 'leaderboard_screen.dart';
+import 'package:who_am_i/model/player.dart';
 
 class GameScreen extends StatefulWidget {
   final List<String> deckImages;
-  final List<String> playerNames;
+  final List<Player> players;
   final int gameTimeMinutes;
 
   const GameScreen({
     Key? key,
     required this.deckImages,
-    required this.playerNames,
+    required this.players,
     required this.gameTimeMinutes,
   }) : super(key: key);
 
@@ -21,10 +23,9 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
-  late List<String> _players;
+  late List<Player> _players;
   late List<String> _deck;
   int _currentPlayerIndex = 0;
-  int _score = 0;
   late int _totalTime;
   bool _isGameOver = false;
 
@@ -38,7 +39,7 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
-    _players = List.from(widget.playerNames);
+    _players = List.from(widget.players);
     _deck = List.from(widget.deckImages);
     _totalTime = widget.gameTimeMinutes * 60;
     _startGameTimer();
@@ -96,7 +97,7 @@ class _GameScreenState extends State<GameScreen> {
     if (_isGameOver) return;
 
     setState(() {
-      _score++;
+      _players[_currentPlayerIndex].score++;
       _nextImage();
     });
   }
@@ -105,7 +106,11 @@ class _GameScreenState extends State<GameScreen> {
     if (_isGameOver) return;
 
     setState(() {
-      _currentPlayerIndex = (_currentPlayerIndex + 1) % _players.length;
+      if (_currentPlayerIndex == _players.length - 1) {
+        _currentPlayerIndex = 0;
+      } else {
+        _currentPlayerIndex++;
+      }
     });
 
     _startPlayerSwitchTimer();
@@ -139,19 +144,20 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
-  void _endGame() {
-    setState(() {
-      _isGameOver = true;
-    });
+void _endGame() {
+  setState(() {
+    _isGameOver = true;
+  });
 
-    Navigator.pushReplacementNamed(
-      context,
-      '/leaderboard',
-      arguments: {
-        "scores": {"${_players[_currentPlayerIndex]}": _score},
-      },
-    );
-  }
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => LeaderboardScreen(
+        players: _players,
+      ),
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -187,7 +193,7 @@ class _GameScreenState extends State<GameScreen> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  "Punkte: $_score",
+                  "Punkte: ${_players[_currentPlayerIndex].score}",
                   style: const TextStyle(fontSize: 20),
                 ),
                 if (_playerSwitchCountdown > 0)

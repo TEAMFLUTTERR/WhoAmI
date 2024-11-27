@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:who_am_i/screens/game_screen.dart';
+import 'package:who_am_i/model/player.dart';
 
 class GameStartScreen extends StatefulWidget {
   const GameStartScreen({Key? key}) : super(key: key);
@@ -177,15 +178,19 @@ class _GameStartScreenState extends State<GameStartScreen> {
                 // Spiel starten Button
                 ElevatedButton(
                   onPressed: () {
-                    List<String> playerNames = _playerNameControllers
-                        .map((controller) => controller.text.trim())
+                    // Create list of Player objects with names and initial score of 0
+                    List<Player> players = _playerNameControllers
+                        .map((controller) => Player(
+                              name: controller.text.trim(),
+                              score: 0,
+                            ))
                         .toList();
 
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => GameScreen(
-                          playerNames: playerNames,
+                          players: players,
                           deckImages: _deckImages,
                           gameTimeMinutes: _gameTimeMinutes,
                         ),
