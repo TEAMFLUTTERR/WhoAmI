@@ -188,7 +188,7 @@ void _endGame() {
                   ),
                 const SizedBox(height: 20),
                 Text(
-                  "Spieler: ${_players[_currentPlayerIndex]}",
+                  "Spieler: ${_players[_currentPlayerIndex].name}",
                   style: const TextStyle(fontSize: 20),
                 ),
                 const SizedBox(height: 20),

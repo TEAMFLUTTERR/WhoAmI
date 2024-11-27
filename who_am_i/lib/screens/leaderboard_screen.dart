@@ -51,8 +51,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
               confettiController: _confettiController,
               blastDirectionality: BlastDirectionality.explosive,
               emissionFrequency: 0.05,
-              numberOfParticles: 20,
-              gravity: 0.3,
+              numberOfParticles: 50,
+              gravity: 0.2,
             ),
           ),
           Padding(
