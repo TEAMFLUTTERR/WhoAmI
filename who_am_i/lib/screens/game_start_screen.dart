@@ -13,6 +13,12 @@ class _GameStartScreenState extends State<GameStartScreen> {
   int _gameTimeMinutes = 5;
   List<TextEditingController> _playerNameControllers = [];
 
+  final List<String> _deckImages = [
+    'assets/deck1.png',
+    'assets/deck2.png',
+    'assets/deck3.png'
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -180,6 +186,7 @@ class _GameStartScreenState extends State<GameStartScreen> {
                       MaterialPageRoute(
                         builder: (context) => GameScreen(
                           playerNames: playerNames,
+                          deckImages: _deckImages,
                           gameTimeMinutes: _gameTimeMinutes,
                         ),
                       ),
