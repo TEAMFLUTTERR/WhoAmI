@@ -16,7 +16,7 @@ dependencies:
   confetti: ^0.8.0
   path_provider_windows: ^2.1.0 
   open_file: ^3.5.10
-  image_picker: ^0.8.7+4
+  image_picker: ^1.1.2
   path_provider: ^2.0.11
 
 dev_dependencies:

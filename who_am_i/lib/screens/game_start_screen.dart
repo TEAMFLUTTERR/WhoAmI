@@ -14,10 +14,11 @@ class _GameStartScreenState extends State<GameStartScreen> {
   int _gameTimeMinutes = 5;
   List<TextEditingController> _playerNameControllers = [];
 
-  final List<String> _deckImages = [
-    'assets/deck1.png',
-    'assets/deck2.png',
-    'assets/deck3.png'
+  final List<Map<String, String>> _deckImages = [
+    {'image': 'assets/deck1.png', 'name': 'Einstein'},
+    {'image': 'assets/deck2.png', 'name': 'Newton'},
+    {'image': 'assets/deck3.png', 'name': 'Tesla'},
+    // Add more cards as needed
   ];
 
   @override
