@@ -1,30 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../utils/sensor_helper.dart';
 import '../utils/timer_helper.dart';
 import 'dart:async';
+import 'leaderboard_screen.dart';
+import 'package:who_am_i/model/player.dart';
+import 'package:path/path.dart' as path;
 
 class GameScreen extends StatefulWidget {
   final List<String> deckImages;
-  final List<String> playerNames;
+  final List<Player> players;
   final int gameTimeMinutes;
 
   const GameScreen({
-    Key? key,
+    super.key,
     required this.deckImages,
-    required this.playerNames,
+    required this.players,
     required this.gameTimeMinutes,
-  }) : super(key: key);
+  });
 
   @override
   _GameScreenState createState() => _GameScreenState();
 }
 
 class _GameScreenState extends State<GameScreen> {
-  late List<String> _players;
+  late List<Player> _players;
   late List<String> _deck;
   int _currentPlayerIndex = 0;
-  int _score = 0;
   late int _totalTime;
   bool _isGameOver = false;
 
@@ -35,20 +38,63 @@ class _GameScreenState extends State<GameScreen> {
   bool _canProcessTilt = true;
   static const _tiltCooldownDuration = Duration(milliseconds: 500);
 
+  // Voice recognition
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _currentImageName = '';
+
   @override
   void initState() {
     super.initState();
-    _players = List.from(widget.playerNames);
+    _players = List.from(widget.players);
     _deck = List.from(widget.deckImages);
     _totalTime = widget.gameTimeMinutes * 60;
+    _speech = stt.SpeechToText();
     _startGameTimer();
     _listenToGyroscope();
+    _initializeSpeechRecognition();
+  }
+
+  Future<void> _initializeSpeechRecognition() async {
+    bool available = await _speech.initialize(
+      onStatus: (status) {
+        if (status == 'done') {
+          setState(() => _isListening = false);
+        }
+      },
+      onError: (error) {
+        setState(() => _isListening = false);
+      },
+    );
+
+    if (available) {
+      _startVoiceRecognition();
+    }
+  }
+
+  void _startVoiceRecognition() {
+    if (_isGameOver || !_canProcessTilt) return;
+
+    if (!_isListening) {
+      setState(() => _isListening = true);
+      _speech.listen(
+        onResult: (result) {
+          String recognizedWords = result.recognizedWords.toLowerCase();
+          if (recognizedWords.contains(_currentImageName.toLowerCase())) {
+            _correctGuess();
+          }
+        },
+        listenFor: const Duration(seconds: 5),
+        localeId: 'de_DE', // German locale
+      );
+    }
   }
 
   @override
   void dispose() {
     _gyroscopeSubscription?.cancel();
     _playerSwitchTimer?.cancel();
+    _speech.stop();
     super.dispose();
   }
 
@@ -96,7 +142,7 @@ class _GameScreenState extends State<GameScreen> {
     if (_isGameOver) return;
 
     setState(() {
-      _score++;
+      _players[_currentPlayerIndex].score++;
       _nextImage();
     });
   }
@@ -105,7 +151,11 @@ class _GameScreenState extends State<GameScreen> {
     if (_isGameOver) return;
 
     setState(() {
-      _currentPlayerIndex = (_currentPlayerIndex + 1) % _players.length;
+      if (_currentPlayerIndex == _players.length - 1) {
+        _currentPlayerIndex = 0;
+      } else {
+        _currentPlayerIndex++;
+      }
     });
 
     _startPlayerSwitchTimer();
@@ -114,7 +164,10 @@ class _GameScreenState extends State<GameScreen> {
   void _nextImage() {
     if (_deck.isNotEmpty) {
       setState(() {
+        // Extract name from image path
+        _currentImageName = path.basenameWithoutExtension(_deck[0]);
         _deck.removeAt(0);
+        _startVoiceRecognition();
       });
     } else {
       _endGame();
@@ -140,62 +193,155 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _endGame() {
+    _speech.stop();
     setState(() {
       _isGameOver = true;
     });
 
-    Navigator.pushReplacementNamed(
+    Navigator.push(
       context,
-      '/leaderboard',
-      arguments: {
-        "scores": {"${_players[_currentPlayerIndex]}": _score},
-      },
+      MaterialPageRoute(
+        builder: (context) => LeaderboardScreen(
+          players: _players,
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text('Spiel läuft'),
+        title: const Text(
+          'Wer bin ich?',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.deepPurple[400],
+        elevation: 0,
       ),
       body: _isGameOver
-          ? const Center(
-              child: Text(
-                "Spiel beendet!",
-                style: TextStyle(fontSize: 24),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.gamepad_outlined,
+                    size: 100,
+                    color: Colors.deepPurple[400],
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    "Spiel beendet!",
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple[400],
+                    ),
+                  ),
+                ],
               ),
             )
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Zeit: ${(_totalTime / 60).floor()}:${(_totalTime % 60).toString().padLeft(2, '0')}",
-                  style: const TextStyle(fontSize: 24),
-                ),
-                const SizedBox(height: 20),
-                if (_deck.isNotEmpty)
-                  Image.asset(
-                    _deck[0],
-                    height: 200,
-                    width: 200,
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Card(
+                    elevation: 6,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Text(
+                            "Zeit: ${(_totalTime / 60).floor()}:${(_totalTime % 60).toString().padLeft(2, '0')}",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  _totalTime < 30 ? Colors.red : Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          if (_deck.isNotEmpty)
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(15),
+                                child: Image.asset(
+                                  _deck[0],
+                                  height: 250,
+                                  width: 250,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
-                const SizedBox(height: 20),
-                Text(
-                  "Spieler: ${_players[_currentPlayerIndex]}",
-                  style: const TextStyle(fontSize: 20),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  "Punkte: $_score",
-                  style: const TextStyle(fontSize: 20),
-                ),
-                if (_playerSwitchCountdown > 0)
-                  Text(
-                    "Nächster Spieler in $_playerSwitchCountdown Sekunden",
-                    style: const TextStyle(fontSize: 16),
+                  const SizedBox(height: 20),
+                  Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    color: Colors.deepPurple[50],
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Text(
+                            "Spieler: ${_players[_currentPlayerIndex].name}",
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.deepPurple[800],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            "Punkte: ${_players[_currentPlayerIndex].score}",
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.deepPurple[700],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: _startVoiceRecognition,
+                            child: Text(_isListening
+                                ? 'Hören...'
+                                : 'Sprachaufnahme starten'),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-              ],
+                  const SizedBox(height: 20),
+                  if (_playerSwitchCountdown > 0)
+                    Text(
+                      "Nächster Spieler in $_playerSwitchCountdown Sekunden",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.deepPurple[600],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                ],
+              ),
             ),
     );
   }

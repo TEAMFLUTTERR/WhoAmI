@@ -4,7 +4,7 @@ import 'game_start_screen.dart';
 import 'leaderboard_screen.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -42,8 +42,7 @@ class HomeScreen extends StatelessWidget {
                 Icons.create,
                 () => Navigator.push(
                   context,
-                  MaterialPageRoute(
-                      builder: (context) => const DeckCreationScreen()),
+                  MaterialPageRoute(builder: (context) => DecksPage()),
                 ),
                 Colors.green,
               ),
@@ -68,9 +67,7 @@ class HomeScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute(
                       builder: (context) => const LeaderboardScreen(
-                            playerNames: ["Spieler 1", "Spieler 2"],
-                            playerPoints: [0, 0],
-                          )), //Hier müssten dann Werte der letzten Runde rein
+                          players: [])), //Hier müssten dann Werte der letzten Runde rein
                 ),
                 Colors.orange,
               ),

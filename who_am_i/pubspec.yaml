@@ -36,6 +36,10 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   sensors_plus: ^6.1.0
+  hive_flutter: ^1.1.0
+  image_picker: ^1.1.2
+  path_provider: ^2.1.5
+  confetti: ^0.8.0
 
 dev_dependencies:
   flutter_test:
