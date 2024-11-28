@@ -34,9 +34,8 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
     // Extract the top 3 players for the podium
     final top3 = widget.players.take(3).toList();
-    final remainingPlayers = widget.players.length > 3
-        ? widget.players.sublist(3)
-        : [];
+    final remainingPlayers =
+        widget.players.length > 3 ? widget.players.sublist(3) : [];
 
     return Scaffold(
       appBar: AppBar(
