@@ -6,13 +6,6 @@ import 'dart:io';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  Directory directory = await getApplicationDocumentsDirectory();
-  Hive.init(directory.path);
-  await Hive.openBox('decks');
-  runApp(DeckCreationScreen());
-}
 
 class Deck {
   String name;
@@ -21,18 +14,6 @@ class Deck {
   Deck({required this.name, this.imagePaths = const []});
 }
 
-class DeckCreationScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Deck Image Manager',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: DecksPage(),
-    );
-  }
-}
 
 class DecksPage extends StatefulWidget {
   @override

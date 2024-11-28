@@ -144,64 +144,147 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
-void _endGame() {
-  setState(() {
-    _isGameOver = true;
-  });
+  void _endGame() {
+    setState(() {
+      _isGameOver = true;
+    });
 
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => LeaderboardScreen(
-        players: _players,
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LeaderboardScreen(
+          players: _players,
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text('Spiel läuft'),
+        title: const Text(
+          'Wer bin ich?',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.deepPurple[400],
+        elevation: 0,
       ),
       body: _isGameOver
-          ? const Center(
-              child: Text(
-                "Spiel beendet!",
-                style: TextStyle(fontSize: 24),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.gamepad_outlined,
+                    size: 100,
+                    color: Colors.deepPurple[400],
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    "Spiel beendet!",
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.deepPurple[400],
+                    ),
+                  ),
+                ],
               ),
             )
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Zeit: ${(_totalTime / 60).floor()}:${(_totalTime % 60).toString().padLeft(2, '0')}",
-                  style: const TextStyle(fontSize: 24),
-                ),
-                const SizedBox(height: 20),
-                if (_deck.isNotEmpty)
-                  Image.asset(
-                    _deck[0],
-                    height: 200,
-                    width: 200,
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Card(
+                    elevation: 6,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Text(
+                            "Zeit: ${(_totalTime / 60).floor()}:${(_totalTime % 60).toString().padLeft(2, '0')}",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: _totalTime < 30 ? Colors.red : Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          if (_deck.isNotEmpty)
+                            Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(15),
+                                child: Image.asset(
+                                  _deck[0],
+                                  height: 250,
+                                  width: 250,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
                   ),
-                const SizedBox(height: 20),
-                Text(
-                  "Spieler: ${_players[_currentPlayerIndex].name}",
-                  style: const TextStyle(fontSize: 20),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  "Punkte: ${_players[_currentPlayerIndex].score}",
-                  style: const TextStyle(fontSize: 20),
-                ),
-                if (_playerSwitchCountdown > 0)
-                  Text(
-                    "Nächster Spieler in $_playerSwitchCountdown Sekunden",
-                    style: const TextStyle(fontSize: 16),
+                  const SizedBox(height: 20),
+                  Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    color: Colors.deepPurple[50],
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Text(
+                            "Spieler: ${_players[_currentPlayerIndex].name}",
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.deepPurple[800],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            "Punkte: ${_players[_currentPlayerIndex].score}",
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.deepPurple[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-              ],
+                  const SizedBox(height: 20),
+                  if (_playerSwitchCountdown > 0)
+                    Text(
+                      "Nächster Spieler in $_playerSwitchCountdown Sekunden",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.deepPurple[600],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                ],
+              ),
             ),
     );
   }
