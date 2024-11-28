@@ -43,7 +43,7 @@ class HomeScreen extends StatelessWidget {
                 () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => DeckManager()),
+                      builder: (context) => DeckCreationScreen()),
                 ),
                 Colors.green,
               ),

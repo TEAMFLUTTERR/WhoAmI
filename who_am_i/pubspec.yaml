@@ -16,8 +16,10 @@ dependencies:
   confetti: ^0.8.0
   path_provider_windows: ^2.1.0 
   open_file: ^3.5.10
-  image_picker: ^0.8.7+4
-  path_provider: ^2.0.11
+  path_provider: ^2.1.1
+  image_picker: ^1.0.4
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
 
 dev_dependencies:
   flutter_test:

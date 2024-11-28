@@ -1,156 +1,213 @@
-import 'dart:io';
+// main.dart
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-class DeckManager extends StatefulWidget {
-  @override
-  _DeckManagerState createState() => _DeckManagerState();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  Directory directory = await getApplicationDocumentsDirectory();
+  Hive.init(directory.path);
+  await Hive.openBox('decks');
+  runApp(DeckCreationScreen());
 }
 
-class _DeckManagerState extends State<DeckManager> {
-  final ImagePicker _picker = ImagePicker();
-  Directory? _appDirectory;
-  Directory? _decksDirectory;
-  List<String> _decks = [];
-  bool _isLoading = true;
+class Deck {
+  String name;
+  List<String> imagePaths;
+
+  Deck({required this.name, this.imagePaths = const []});
+}
+
+class DeckCreationScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Deck Image Manager',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: DecksPage(),
+    );
+  }
+}
+
+class DecksPage extends StatefulWidget {
+  @override
+  _DecksPageState createState() => _DecksPageState();
+}
+
+class _DecksPageState extends State<DecksPage> {
+  late Box decksBox;
+  List<Deck> decks = [];
 
   @override
   void initState() {
     super.initState();
-    _initializeFolders();
-  }
-
-  Future<void> _initializeFolders() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-
-      // Hauptspeicherpfad abrufen
-      _appDirectory = await getApplicationDocumentsDirectory();
-      _decksDirectory = Directory('${_appDirectory!.path}/Decks');
-
-      if (!await _decksDirectory!.exists()) {
-        await _decksDirectory!.create(recursive: true);
-      }
-
-      // Lade bestehende Decks
-      _loadDecks();
-    } catch (e) {
-      print('Fehler beim Initialisieren der Ordner: $e');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+    _loadDecks();
   }
 
   void _loadDecks() {
+    decksBox = Hive.box('decks');
     setState(() {
-      _decks = _decksDirectory!
-          .listSync()
-          .where((entity) => entity is Directory)
-          .map((e) => e.path.split('/').last)
+      decks = decksBox.values
+          .map((dynamic value) => Deck(
+              name: value['name'], 
+              imagePaths: List<String>.from(value['imagePaths'] ?? [])))
           .toList();
     });
   }
 
-  Future<void> _createNewDeck() async {
-    try {
-      if (_decksDirectory == null) {
-        throw Exception('Decks-Verzeichnis ist noch nicht bereit.');
-      }
-
-      final deckName = 'Deck_${DateTime.now().millisecondsSinceEpoch}';
-      final newDeckPath = '${_decksDirectory!.path}/$deckName';
-
-      // Ordner erstellen
-      await Directory(newDeckPath).create();
-
-      // UI aktualisieren
-      setState(() {
-        _decks.add(deckName);
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$deckName wurde erstellt!')),
-      );
-    } catch (e) {
-      print('Fehler beim Erstellen des Decks: $e');
-    }
-  }
-
-  Future<void> _addImageToDeck(String deckName, {required bool fromCamera}) async {
-    try {
-      final XFile? image = await _picker.pickImage(
-        source: fromCamera ? ImageSource.camera : ImageSource.gallery,
-      );
-
-      if (image != null && _decksDirectory != null) {
-        final deckPath = '${_decksDirectory!.path}/$deckName';
-        final fileName = 'image_${DateTime.now().millisecondsSinceEpoch}.jpg';
-        final newImagePath = '$deckPath/$fileName';
-
-        await File(image.path).copy(newImagePath);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bild in $deckName gespeichert!')),
-        );
-      }
-    } catch (e) {
-      print('Fehler beim Hinzufügen eines Bildes: $e');
-    }
+  void _createDeck() {
+    final TextEditingController nameController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Neues Deck erstellen'),
+        content: TextField(
+          controller: nameController,
+          decoration: InputDecoration(hintText: 'Deck Name'),
+        ),
+        actions: [
+          TextButton(
+            child: Text('Erstellen'),
+            onPressed: () {
+              if (nameController.text.isNotEmpty) {
+                setState(() {
+                  Deck newDeck = Deck(name: nameController.text);
+                  decks.add(newDeck);
+                  decksBox.add({
+                    'name': newDeck.name,
+                    'imagePaths': newDeck.imagePaths
+                  });
+                });
+                Navigator.pop(context);
+              }
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(
-        appBar: AppBar(title: Text('Deck Manager')),
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Deck Manager'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: _createNewDeck,
-          ),
-        ],
+      appBar: AppBar(title: Text('Meine Decks')),
+      body: ListView.builder(
+        itemCount: decks.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(decks[index].name),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DeckDetailPage(deck: decks[index]),
+                ),
+              );
+            },
+          );
+        },
       ),
-      body: _decks.isEmpty
-          ? Center(
-              child: Text(
-                'Keine Decks gefunden. Drücke auf "+" um ein neues Deck zu erstellen.',
-                textAlign: TextAlign.center,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _createDeck,
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+class DeckDetailPage extends StatefulWidget {
+  final Deck deck;
+
+  DeckDetailPage({required this.deck});
+
+  @override
+  _DeckDetailPageState createState() => _DeckDetailPageState();
+}
+
+class _DeckDetailPageState extends State<DeckDetailPage> {
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _addImage() async {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.camera),
+                title: Text('Kamera'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+                  if (image != null) {
+                    _saveImage(image.path);
+                  }
+                },
               ),
-            )
-          : ListView.builder(
-              itemCount: _decks.length,
-              itemBuilder: (context, index) {
-                final deckName = _decks[index];
-                return ListTile(
-                  title: Text(deckName),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.photo),
-                        onPressed: () => _addImageToDeck(deckName, fromCamera: false),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.camera_alt),
-                        onPressed: () => _addImageToDeck(deckName, fromCamera: true),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+              ListTile(
+                leading: Icon(Icons.photo_library),
+                title: Text('Datei auswählen'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+                  if (image != null) {
+                    _saveImage(image.path);
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _saveImage(String imagePath) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final fileName = DateTime.now().millisecondsSinceEpoch.toString() + '.jpg';
+    final newPath = '${directory.path}/decks/${widget.deck.name}/$fileName';
+    
+    await Directory('${directory.path}/decks/${widget.deck.name}').create(recursive: true);
+    await File(imagePath).copy(newPath);
+
+    setState(() {
+      widget.deck.imagePaths.add(newPath);
+      Hive.box('decks').put(widget.deck.name, {
+        'name': widget.deck.name,
+        'imagePaths': widget.deck.imagePaths
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.deck.name)),
+      body: GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
+        ),
+        itemCount: widget.deck.imagePaths.length + 1,
+        itemBuilder: (context, index) {
+          if (index == widget.deck.imagePaths.length) {
+            return IconButton(
+              icon: Icon(Icons.add_photo_alternate),
+              onPressed: _addImage,
+            );
+          }
+          return Image.file(File(widget.deck.imagePaths[index]));
+        },
+      ),
     );
   }
 }
