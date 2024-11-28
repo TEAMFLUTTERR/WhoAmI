@@ -27,11 +27,16 @@ class _DecksPageState extends State<DecksPage> {
   @override
   void initState() {
     super.initState();
+    //Hive.deleteBoxFromDisk('decks');
+    _openBoxAndLoadDecks();
+  }
+
+  Future<void> _openBoxAndLoadDecks() async {
+    decksBox = await Hive.openBox('decks');
     _loadDecks();
   }
 
   void _loadDecks() {
-    decksBox = Hive.box('decks');
     setState(() {
       decks = decksBox.values
           .map((dynamic value) => Deck(
@@ -54,18 +59,38 @@ class _DecksPageState extends State<DecksPage> {
         ),
         actions: [
           TextButton(
-            child: const Text('Erstellen'),
             onPressed: () {
-              if (nameController.text.isNotEmpty) {
-                setState(() {
-                  Deck newDeck = Deck(name: nameController.text);
-                  decks.add(newDeck);
-                  decksBox.add(
-                      {'name': newDeck.name, 'imagePaths': newDeck.imagePaths});
-                });
-                Navigator.pop(context);
-              }
+              Navigator.of(context).pop();
             },
+            child: const Text('Abbrechen'),
+          ),
+          TextButton(
+            onPressed: () {
+              final String deckName = nameController.text.trim();
+              if (deckName.isNotEmpty) {
+                final existingDeck = decksBox.values.firstWhere(
+                  (dynamic value) => value['name'] == deckName,
+                  orElse: () => null,
+                );
+                if (existingDeck == null) {
+                  decksBox.add({
+                    'name': deckName,
+                    'imagePaths': [],
+                  });
+                  _loadDecks();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content:
+                          Text('Ein Deck mit diesem Namen existiert bereits.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+              Navigator.of(context).pop();
+            },
+            child: const Text('Erstellen'),
           ),
         ],
       ),

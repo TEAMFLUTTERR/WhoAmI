@@ -22,15 +22,22 @@ class _GameStartScreenState extends State<GameStartScreen> {
   void initState() {
     super.initState();
     _initializePlayerControllers();
+    _openBoxAndLoadDecks();
+  }
+
+  Future<void> _openBoxAndLoadDecks() async {
+    decksBox = await Hive.openBox('decks');
     _loadDecks();
   }
 
   void _loadDecks() {
-    decksBox = Hive.box('decks');
     setState(() {
+      _availableDecks.clear();
       _availableDecks = decksBox.values
-          .map((dynamic value) =>
-              {'name': value['name'], 'imagePaths': value['imagePaths'] ?? []})
+          .map((dynamic value) => {
+                'name': value['name'],
+                'imagePaths': List<String>.from(value['imagePaths'] ?? [])
+              })
           .toList();
     });
   }
