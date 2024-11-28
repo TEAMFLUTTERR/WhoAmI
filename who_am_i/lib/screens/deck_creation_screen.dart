@@ -6,14 +6,12 @@ import 'dart:io';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-
 class Deck {
   String name;
   List<String> imagePaths;
 
   Deck({required this.name, this.imagePaths = const []});
 }
-
 
 class DecksPage extends StatefulWidget {
   @override
@@ -152,8 +150,32 @@ class _DeckDetailPageState extends State<DeckDetailPage> {
   }
 
   void _saveImage(String imagePath) async {
+    final TextEditingController nameController = TextEditingController();
+    
+    // Show a dialog to get the image name
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Bild benennen'),
+        content: TextField(
+          controller: nameController,
+          decoration: InputDecoration(hintText: 'Bildname'),
+        ),
+        actions: [
+          TextButton(
+            child: Text('Speichern'),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
+
+    // Get the directory and create a unique filename
     final directory = await getApplicationDocumentsDirectory();
-    final fileName = DateTime.now().millisecondsSinceEpoch.toString() + '.jpg';
+    final fileName = nameController.text.isNotEmpty 
+      ? '${nameController.text}.jpg' 
+      : DateTime.now().millisecondsSinceEpoch.toString() + '.jpg';
+    
     final newPath = '${directory.path}/decks/${widget.deck.name}/$fileName';
     
     await Directory('${directory.path}/decks/${widget.deck.name}').create(recursive: true);
