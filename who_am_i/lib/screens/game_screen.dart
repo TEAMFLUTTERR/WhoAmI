@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 import '../utils/sensor_helper.dart';
 import '../utils/timer_helper.dart';
 import 'dart:async';
 import 'leaderboard_screen.dart';
 import 'package:who_am_i/model/player.dart';
+import 'package:path/path.dart' as path;
 
 class GameScreen extends StatefulWidget {
   final List<String> deckImages;
@@ -36,20 +38,63 @@ class _GameScreenState extends State<GameScreen> {
   bool _canProcessTilt = true;
   static const _tiltCooldownDuration = Duration(milliseconds: 500);
 
+  // Voice recognition
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _currentImageName = '';
+
   @override
   void initState() {
     super.initState();
     _players = List.from(widget.players);
     _deck = List.from(widget.deckImages);
     _totalTime = widget.gameTimeMinutes * 60;
+    _speech = stt.SpeechToText();
     _startGameTimer();
     _listenToGyroscope();
+    _initializeSpeechRecognition();
+  }
+
+  Future<void> _initializeSpeechRecognition() async {
+    bool available = await _speech.initialize(
+      onStatus: (status) {
+        if (status == 'done') {
+          setState(() => _isListening = false);
+        }
+      },
+      onError: (error) {
+        setState(() => _isListening = false);
+      },
+    );
+    
+    if (available) {
+      _startVoiceRecognition();
+    }
+  }
+
+  void _startVoiceRecognition() {
+    if (_isGameOver || !_canProcessTilt) return;
+
+    if (!_isListening) {
+      setState(() => _isListening = true);
+      _speech.listen(
+        onResult: (result) {
+          String recognizedWords = result.recognizedWords.toLowerCase();
+          if (recognizedWords.contains(_currentImageName.toLowerCase())) {
+            _correctGuess();
+          }
+        },
+        listenFor: const Duration(seconds: 5),
+        localeId: 'de_DE', // German locale
+      );
+    }
   }
 
   @override
   void dispose() {
     _gyroscopeSubscription?.cancel();
     _playerSwitchTimer?.cancel();
+    _speech.stop();
     super.dispose();
   }
 
@@ -119,7 +164,10 @@ class _GameScreenState extends State<GameScreen> {
   void _nextImage() {
     if (_deck.isNotEmpty) {
       setState(() {
+        // Extract name from image path
+        _currentImageName = path.basenameWithoutExtension(_deck[0]);
         _deck.removeAt(0);
+        _startVoiceRecognition();
       });
     } else {
       _endGame();
@@ -145,6 +193,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _endGame() {
+    _speech.stop();
     setState(() {
       _isGameOver = true;
     });
@@ -267,6 +316,14 @@ class _GameScreenState extends State<GameScreen> {
                             style: TextStyle(
                               fontSize: 20,
                               color: Colors.deepPurple[700],
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          ElevatedButton(
+                            onPressed: _startVoiceRecognition,
+                            child: Text(_isListening 
+                              ? 'Hören...' 
+                              : 'Sprachaufnahme starten'
                             ),
                           ),
                         ],
