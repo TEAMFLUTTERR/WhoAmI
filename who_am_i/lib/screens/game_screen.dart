@@ -43,6 +43,8 @@ class _GameScreenState extends State<GameScreen> {
   // Voice recognition
   late stt.SpeechToText _speech;
   bool _isListening = false;
+  String _lastDetectedSpeech = '';
+
   String _currentImageName = '';
 
   @override
@@ -78,11 +80,20 @@ class _GameScreenState extends State<GameScreen> {
     if (_isGameOver || !_canProcessTilt) return;
 
     if (!_isListening) {
-      setState(() => _isListening = true);
+      setState(() {
+        _isListening = true;
+        _lastDetectedSpeech = ''; // Clear previous detection
+      });
+
       _speech.listen(
         onResult: (result) {
           String recognizedWords = result.recognizedWords.toLowerCase();
           String currentName = _currentImageName.toLowerCase();
+
+          // Update UI with detected speech
+          setState(() {
+            _lastDetectedSpeech = recognizedWords;
+          });
 
           // Use similarity check instead of contains
           double similarity = recognizedWords.similarityTo(currentName);
@@ -334,6 +345,46 @@ class _GameScreenState extends State<GameScreen> {
                             child: Text(_isListening
                                 ? 'Hören...'
                                 : 'Sprachaufnahme starten'),
+                          ),
+                          const SizedBox(height: 15),
+                          // Add new speech detection display
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: Colors.deepPurple.withOpacity(0.3),
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Erkannte Sprache:',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.deepPurple[600],
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  _lastDetectedSpeech.isEmpty
+                                      ? 'Noch nichts erkannt...'
+                                      : _lastDetectedSpeech,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: _lastDetectedSpeech.isEmpty
+                                        ? Colors.grey
+                                        : Colors.black87,
+                                    fontStyle: _lastDetectedSpeech.isEmpty
+                                        ? FontStyle.italic
+                                        : FontStyle.normal,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
