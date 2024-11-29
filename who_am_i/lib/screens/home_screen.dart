@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'deck_creation_screen.dart';
 import 'game_start_screen.dart';
-import 'leaderboard_screen.dart';
+import 'explain_screen.dart'; // Import the explanation screen
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -61,13 +61,12 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 20),
               _buildStyledButton(
                 context,
-                'Bestenliste',
-                Icons.leaderboard,
+                'Wie spielt man?',
+                Icons.help_outline,
                 () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const LeaderboardScreen(
-                          players: [])), //Hier müssten dann Werte der letzten Runde rein
+                      builder: (context) => ExplanationScreen()),
                 ),
                 Colors.orange,
               ),
