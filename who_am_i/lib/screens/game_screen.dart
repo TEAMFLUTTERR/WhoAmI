@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:who_am_i/utils/string_similiarity.dart';
 import 'dart:async';
 import 'leaderboard_screen.dart';
 import 'package:who_am_i/model/player.dart';
@@ -37,6 +38,7 @@ class _GameScreenState extends State<GameScreen> {
   StreamSubscription? _gyroscopeSubscription;
   bool _canProcessTilt = true;
   static const _tiltCooldownDuration = Duration(milliseconds: 500);
+  final _confidenceThreshold = 0.7;
 
   // Voice recognition
   late stt.SpeechToText _speech;
@@ -80,12 +82,19 @@ class _GameScreenState extends State<GameScreen> {
       _speech.listen(
         onResult: (result) {
           String recognizedWords = result.recognizedWords.toLowerCase();
-          if (recognizedWords.contains(_currentImageName.toLowerCase())) {
+          String currentName = _currentImageName.toLowerCase();
+
+          // Use similarity check instead of contains
+          double similarity = recognizedWords.similarityTo(currentName);
+
+          if (similarity >= _confidenceThreshold) {
             _correctGuess();
+            _speech.stop();
+            setState(() => _isListening = false);
           }
         },
         listenFor: const Duration(seconds: 5),
-        localeId: 'de_DE', // German locale
+        localeId: 'de_DE',
       );
     }
   }
