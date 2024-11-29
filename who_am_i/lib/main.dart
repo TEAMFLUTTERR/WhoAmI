@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'screens/deck_creation_screen.dart';
 
 void main() async {
   runApp(const WhoAmIApp());
@@ -12,7 +10,7 @@ void main() async {
 }
 
 class WhoAmIApp extends StatelessWidget {
-  const WhoAmIApp({Key? key}) : super(key: key);
+  const WhoAmIApp({super.key});
 
   @override
   Widget build(BuildContext context) {

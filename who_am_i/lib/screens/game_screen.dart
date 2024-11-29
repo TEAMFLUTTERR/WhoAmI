@@ -1,8 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
-import '../utils/sensor_helper.dart';
-import '../utils/timer_helper.dart';
 import 'dart:async';
 import 'leaderboard_screen.dart';
 import 'package:who_am_i/model/player.dart';
@@ -280,8 +280,8 @@ class _GameScreenState extends State<GameScreen> {
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(15),
-                                child: Image.asset(
-                                  _deck[0],
+                                child: Image.file(
+                                  File(_deck[0]),
                                   height: 250,
                                   width: 250,
                                   fit: BoxFit.cover,
